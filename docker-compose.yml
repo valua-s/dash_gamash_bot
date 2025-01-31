@@ -1,0 +1,7 @@
+version: '3.3'
+
+services:
+    bot:
+        container_name: proka44ai_bot
+        image: valuas/proka44ai_bot
+        env_file: .env

@@ -1,0 +1,5 @@
+aiogram
+APScheduler
+python-decouple
+requests
+gspread
