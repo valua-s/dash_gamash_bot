@@ -15,5 +15,5 @@ async def cmd_start(message: Message):
         )
     await message.answer(
         text='Выберите подходящий вариант',
-        reply_markup=start_keyboard(message.from_user.id)
+        reply_markup=start_keyboard()
     )

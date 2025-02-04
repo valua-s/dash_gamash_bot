@@ -1,5 +1,4 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from google_sheets_records.record_to_google_sheets import RecordProka44ai
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 from decouple import config
 
 
@@ -7,7 +6,7 @@ def start_keyboard():
     
     inline_kb_list = [
         [InlineKeyboardButton(
-            text='Весь ассортимент магазина 🛍️', callback_data='shop_assortiment'
+            text='Весь ассортимент магазина 🛍️', callback_data='shop_assortiment page: 1'
             )],
         [InlineKeyboardButton(
             text='Обо мне 👨‍💻', callback_data='about_me'
@@ -16,40 +15,99 @@ def start_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
 
-def accept_keyboard():
+def under_item_keyboard(item_id, message_id, show_cart=None):
+
     inline_kb_list = [
         [InlineKeyboardButton(
-            text='Да, все верно', callback_data='accept_record'
+            text='Добавить в корзину 🛍️', callback_data=f'item_id: {item_id}: {message_id}'
             )],
-        [InlineKeyboardButton(
-            text='Нет, хочу вернуться и выбрать другое...', callback_data='change_record'
-            )],
+        ]
+
+    if show_cart:
+        inline_kb_list.insert(
+            1,
+            [InlineKeyboardButton(
+                text='Показать корзину 🛒', callback_data='show_cart'
+            )]
+        )
+    
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list, one_time_keyboard=True)
+
+
+def show_next_page(next_page):
+    inline_kb_list = [
+        [
+        InlineKeyboardButton(
+            text='Следующая страница 🛍️', callback_data=f'shop_assortiment page: {next_page}'
+        )
+        ],
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
 
-def cancel_keyboard():
+def under_want_buy_keyboard(item_id):
     inline_kb_list = [
-        [InlineKeyboardButton(
-            text='Да, все верно', callback_data='delete_record'
-            )],
-        [InlineKeyboardButton(
-            text='Нет, хочу вернуться и выбрать другое...', callback_data='change_record'
-            )],
+        [
+            InlineKeyboardButton(
+                text='Показать корзину 🛒', callback_data='show_cart'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Изменить количество', callback_data=f'change_count: {item_id}'
+            )
+        ]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
 
-def payment_keyboard():
+def two_to_five_keyboard(item_id):
+    inline_kb_list = []
+    for num in range(2, 6):
+        inline_kb_list.append([InlineKeyboardButton(text=str(num), callback_data=f'this_count: {num}: {item_id}')])
+    inline_kb_list.append([InlineKeyboardButton(text='Другое количество', callback_data=f'other_count: {item_id}')])
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list, one_time_keyboard=True)
+
+
+def choose_logistic_keyboard():
     inline_kb_list = [
-        [InlineKeyboardButton(
-            text='Отправил по номеру телефона', callback_data='by_number_payment',
-            )],
-        [InlineKeyboardButton(
-            text='Оплачу наличными при встрече', callback_data='by_cash_payment'
-            )],
-        # [InlineKeyboardButton(
-        #     text='Оплата онлайн', callback_data='online_payment'
-        #     )],
+        [
+            InlineKeyboardButton(
+                text='Перейти к выбору доставки 🚚', callback_data='choose_logistic'
+            )
+        ],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
+def share_contact_keyboard():
+    kb_list = [
+        [
+            KeyboardButton(
+                text='Поделится контактом 📱', request_contact=True
+            )
+        ],
+    ]
+    return ReplyKeyboardMarkup(keyboard=kb_list, one_time_keyboard=True, resize_keyboard=True)
+
+
+def logistic_keyboard():
+    kb_list = [
+        [
+            KeyboardButton(
+                text='Почта России 📮'
+            )
+        ],
+    ]
+    return ReplyKeyboardMarkup(keyboard=kb_list, one_time_keyboard=True, resize_keyboard=True)
+
+
+def pay_order_keyboard():
+    inline_kb_list = [
+        [
+            InlineKeyboardButton(
+                text='Оплатить заказ 💸', callback_data='pay_order'
+            )
+        ],
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)

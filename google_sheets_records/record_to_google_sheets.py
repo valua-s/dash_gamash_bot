@@ -31,3 +31,15 @@ class TableDashaRecorder:
         # for i in range(1, 6):
         #     self.worksheet.update_cell(int(row), i, '')
         return 'Успешное удаление'
+    
+    def create_assortiment_dict(self) -> [dict, int]:
+        
+        assortiment_dict: dict = {}
+        names_of_column: [str] = self.worksheet.row_values(1)
+    
+        for name_of_column in names_of_column:
+            cell = self.worksheet.find(name_of_column)
+            values_list = self.worksheet.col_values(cell.col)[1:]
+            assortiment_dict[name_of_column] = values_list
+        
+        return [assortiment_dict, len(values_list)]
