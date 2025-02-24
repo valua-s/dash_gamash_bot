@@ -2,6 +2,6 @@ version: '3.3'
 
 services:
     bot:
-        container_name: proka44ai_bot
-        image: valuas/proka44ai_bot
+        container_name: dash_gamash_bot
+        image: valuas/dash_gamash_bot
         env_file: .env

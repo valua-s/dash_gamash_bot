@@ -34,7 +34,8 @@ def under_item_keyboard(item_id, message_id, show_cart=None):
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list, one_time_keyboard=True)
 
 
-def show_next_page(next_page):
+def show_next_page(page):
+    next_page = page + 1
     inline_kb_list = [
         [
         InlineKeyboardButton(

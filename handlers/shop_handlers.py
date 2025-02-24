@@ -10,6 +10,8 @@ from google_sheets_records.record_to_google_sheets import TableDashaRecorder
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from create_bot import logger
+from db_handler.db_info import DB
+
 
 
 class Item(StatesGroup):
@@ -30,40 +32,33 @@ shop_router = Router()
 COUNT_OF_ITEMS_PER_PAGE = 5
 
 
-async def create_shop_dict(state: FSMContext) -> dict:
-    
-    record_maker: TableDashaRecorder = TableDashaRecorder()
-    assortiment_dict, count_od_items = record_maker.create_assortiment_dict()
-        
-    await state.update_data(shop_dict=assortiment_dict)
-    await state.update_data(pages=math.ceil(count_od_items/COUNT_OF_ITEMS_PER_PAGE))
-
-
 @shop_router.callback_query(F.data.contains('shop_assortiment'))
 async def shop_assortiment(call: CallbackQuery, state: FSMContext, bot: Bot):
+    
     page = int(call.data.split(': ')[1])
     if page == 1:
         await call.message.answer('Один момент, уточню у Даши ассортимент :)')
-        # При первом запуске формируем словарик для удобного доступа к ассортименту
-        await create_shop_dict(state)
+        assortiment = await DB().get_queryset_of_count()
+        await state.update_data(shop_dict=assortiment)
+        await state.update_data(pages=math.ceil(len(assortiment)/COUNT_OF_ITEMS_PER_PAGE))
     else:
         await call.message.delete()
     await send_assortiment_page(call, state, page)
 
 
 async def send_assortiment_page(call: CallbackQuery, state: FSMContext, page=1) -> None:
+    
     data = await state.get_data()
     assortiment_dict = data.get('shop_dict')
-    next_page = None
-    end_of_range = min(page * COUNT_OF_ITEMS_PER_PAGE, len(assortiment_dict['ID'])-1)
+    end_of_range = min(page * COUNT_OF_ITEMS_PER_PAGE, len(assortiment_dict))
     
     for index in range((page-1) * COUNT_OF_ITEMS_PER_PAGE, end_of_range): # Выводим список из COUNT_OF_ITEMS_PER_PAGE товаров
-        id_item = assortiment_dict['ID'][index]
-        name = assortiment_dict['Название'][index]
-        cost = assortiment_dict['Стоимость'][index]
-        description = assortiment_dict['Описание'][index]
+        id_item = assortiment_dict[index]['id']
+        name = assortiment_dict[index]['name']
+        cost = assortiment_dict[index]['amount']
+        description = assortiment_dict[index]['description']
         await call.message.answer_photo(
-            photo=assortiment_dict['Ссылка на фото'][index],
+            photo=assortiment_dict[index]['photo_link'],
             caption=(
                 f'📦 Название товара: {name}\n'
                 ' \n'
@@ -75,10 +70,9 @@ async def send_assortiment_page(call: CallbackQuery, state: FSMContext, page=1) 
         )
         
     if page < int(data.get('pages')): # если страница меньше общего числа страниц то формируем кнопку следующая страница
-        next_page = page + 1
         await call.message.answer(
             f'Здесь только {COUNT_OF_ITEMS_PER_PAGE} товаров, показать еще?',
-            reply_markup=show_next_page(next_page)
+            reply_markup=show_next_page(page)
         )
 
 
@@ -88,8 +82,10 @@ async def want_buy(call: CallbackQuery, bot: Bot, state: FSMContext):
     
     data = await state.get_data()
     assortiment_dict = data.get('shop_dict')
-    item_name = assortiment_dict.get('Название')[int(item_id)-1]
-    item_price = assortiment_dict.get('Стоимость')[int(item_id)-1]
+    for item in assortiment_dict:
+        if item.get('id') == int(item_id):
+            item_name = item.get('name')
+            item_price = item.get('amount')
     
     data = await state.get_data()
     full_cart = data.get('cart')
@@ -112,7 +108,6 @@ async def want_buy(call: CallbackQuery, bot: Bot, state: FSMContext):
         reply_markup=under_want_buy_keyboard(item_id)
     )
     await call.message.delete()
-
 
 
 @shop_router.callback_query(F.data.contains('change_count:'))
@@ -264,9 +259,9 @@ async def get_logistic(message: Message, state: FSMContext):
 async def pay_order(call: CallbackQuery, state: FSMContext, bot: Bot):
     await call.message.answer(
         text=(
-            'Благодарю Вас за заказ! \n'
-            '\n'
-            'Вы можете оправить деньги через приложение любого банка: \n'
+            'Благодарю Вас за заказ!\n'
+            'Даша свяжется с Вами в ближайщее время для подтверждения!\n\n'
+            'А пока Вы можете оправить деньги через приложение любого банка: \n'
             'Тинькофф - по номеру телефона +79500638409 (получатель Дарья Никитична Г)\n'
             'или используя реквизиты ниже 👇'
         ),
